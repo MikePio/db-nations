@@ -36,11 +36,22 @@ public class Main {
 		+ " WHERE c.name LIKE " +  wordToSearch
 		+ " ORDER BY c.name ASC;";
 
+		final String statsByCountryId = " SELECT * "
+		+ " FROM country_stats cs "
+		+ " WHERE cs.country_id = ? "
+		+ " ORDER BY `year` DESC "
+		+ " LIMIT 1; ";
+
+	final String languagesByCountryId = " SELECT * "
+		+ " FROM languages l "
+		+ "	JOIN country_languages cl "
+		+ "		ON l.language_id = cl.language_id "
+		+ " WHERE cl.country_id = ? ";
+
 		try (Connection conn = DriverManager.getConnection(url, user, password)) {
 
 			// System.out.println("\nConnessione stabilita correttamente");
 
-			try {
 				PreparedStatement ps = conn.prepareStatement(sql);
 				ResultSet rs = ps.executeQuery();
 
@@ -64,9 +75,38 @@ public class Main {
 
 				}
 
-			} catch (Exception e) {
-				System.err.println("Errore: " + e.getMessage());
-			}
+				System.out.println("\n----------------------------------\n");
+
+				System.out.print("\nScegli una nazione inserendo l'id: ");
+				int countryId = Integer.valueOf(sc.nextLine());
+
+				ps = conn.prepareStatement(languagesByCountryId);
+				ps.setInt(1, countryId);
+				rs = ps.executeQuery();
+
+				String langs = "";
+
+				while (rs.next()) {
+
+					String lang = rs.getString("language");
+					langs += lang + " | ";
+
+				}
+
+				System.out.println("\n----------------------------------\n");
+
+				ps = conn.prepareStatement(statsByCountryId);
+				ps.setInt(1, countryId);
+				rs = ps.executeQuery();
+				// prima di accedere ai dati, deve spostarsi al primo record quindi sposta il cursore del risultato per la seconda query
+				rs.next();
+
+				// stampare nel terminale la query
+				System.out.println("Dettagli nazione " + countryId + ":"
+				+ "\nLingue: " +  langs
+				+ "\nAnni: " + rs.getString("year") 
+				+ "\nPopolazione: " + rs.getString("population")
+				+ "\nGDP: " + rs.getString("gdp"));
 
 		} catch (Exception e) {
 
